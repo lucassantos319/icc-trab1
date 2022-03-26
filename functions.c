@@ -15,7 +15,7 @@ void NewtonGaussSeidelResolveMethod(infos in)
 
 }
 
-void printResult(infos in, int countProblems)
+void printResult(infos *in, int countProblems, char *arqName)
 {
 
 }

@@ -8,9 +8,7 @@ char* validateArgs(int argc, char *argv[])
             return argv[2];        
 
     }
-    else
-        printf("./newtonPc -o <arquivo_saida>\n");
-            
+
     return NULL;
 
 }
