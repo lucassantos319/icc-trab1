@@ -10,6 +10,14 @@
 
 typedef struct 
 {
+     double newtonTime;
+     double newtonModifyTime;
+     double newtonGaussSeidel;
+
+} timesInfos;
+
+typedef struct 
+{
      int n; 
      char f[BUFFER_SIZE];
      double *initialsApproaches;
@@ -19,13 +27,6 @@ typedef struct
 
 } infos;
 
-typedef struct 
-{
-     double newtonTime;
-     double newtonModifyTime;
-     double newtonGaussSeidel;
-
-} timesInfos;
 
 char* validateArgs(int argc, char *argv[]);
 void getInfos(infos *in,int *countProblems)
