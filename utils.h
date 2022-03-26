@@ -14,9 +14,20 @@ typedef struct
      char f[BUFFER_SIZE];
      double *initialsApproaches;
      double epsilon;
+     timesInfos *times;
      int itMax;
 
 } infos;
 
+typedef struct 
+{
+     double newtonTime;
+     double newtonModifyTime;
+     double newtonGaussSeidel;
+
+} timesInfos;
+
+char* validateArgs(int argc, char *argv[]);
+void getInfos(infos *in,int *countProblems)
 
 #endif // __UTILS_H__

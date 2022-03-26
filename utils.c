@@ -6,6 +6,7 @@ char* validateArgs(int argc, char *argv[])
     {
         if ( strcmp(argv[1],"-o") == 0)
             return argv[2];        
+
     }
     else
         printf("./newtonPc -o <arquivo_saida>\n");
@@ -22,6 +23,8 @@ void getInfos(infos *in,int *countProblems)
     {
  
         in[(*countProblems)-1].initialsApproaches = (double *) malloc (sizeof(double)*in[(*countProblems)-1].n);
+        in[(*countProblems)-1].times = (timesInfos *) malloc (sizeof(timesInfos));
+        
         scanf("%s",in[(*countProblems)-1].f);
         length = strlen(in[(*countProblems)-1].f);
 
