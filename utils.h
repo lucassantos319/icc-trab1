@@ -29,6 +29,5 @@ typedef struct
 
 
 char* validateArgs(int argc, char *argv[]);
-void getInfos(infos *in,int *countProblems);
 
 #endif // __UTILS_H__
