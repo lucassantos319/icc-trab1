@@ -7,6 +7,11 @@ void NewtonResolveMethod(infos in)
     double *x = (double *) malloc (sizeof(double)*in.n);
     
     f = evaluator_create(in.f);
+    int length = strlen(in.f);
+
+    if ( in.f[length-1] == '\n' && length > 0 )
+        in.f[length-1] = '\0';
+    
     assert(f);
 
     printf("-- NewtonResolveMethod --\n");
