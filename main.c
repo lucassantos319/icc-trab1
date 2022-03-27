@@ -28,6 +28,7 @@ infos *GetInfos(int *countProblems)
         ++(*countProblems);
         in = realloc (in,sizeof(infos)*(*countProblems)-1);
     }
+    return in;
 }
 
 int main (int argc, char *argv[])
