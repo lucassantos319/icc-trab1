@@ -27,7 +27,7 @@ typedef struct
 
 } infos;
 
-
+infos *GetInfos(int *countProblems);
 char* validateArgs(int argc, char *argv[]);
 
 #endif // __UTILS_H__
