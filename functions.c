@@ -6,8 +6,9 @@ void NewtonResolveMethod(infos in)
     double *x_ant = in.initialsApproaches;
     double *x = (double *) malloc (sizeof(double)*in.n);
 
-    double **mF = GetFMatrix(in);
-
+    double **mF = GetFMatrix(in,x_ant);
+    if ( mF == NULL  )
+        return ;
 
 }
 
@@ -26,9 +27,9 @@ void printResult(infos *in, int countProblems, char *arqName)
 
 }
 
-double **GetFMatrix(infos in)
+double **GetFMatrix(infos in, double *x)
 {
-    void *f;
+    void *f,*fd;
     int count;
     char **variables;
     
@@ -46,10 +47,24 @@ double **GetFMatrix(infos in)
     assert(f);
     evaluator_get_variables (f, &variables, &count);
 
-    printf("count = %d ; n = %d\n",count,in.n);
+    if ( count != in.n )
+        return NULL;
 
-    // for ( int i = 0 ; i < in.n ; ++i )
-    //     for (int i = 0 ; i < in.n ; ++i )
+    for ( int i = 0 ; i < in.n ; ++i )
+        for (int j = 0 ; j < in.n ; ++j )
+        {
+            fd = evaluator_derivative(f,variables[i]);
+            mF[i][j] = evaluator_evaluate(f,in.n,variables[i],x);
+        }
+
+
+    for (int i = 0 ; i < in.n ; ++i)
+    {
+        for (int j = 0 ; j < in.n ; ++j)
+            printf("%g ",mF[i][j]);
+
+        printf("\n");
+    }
 
     free(variables);
     return mF;
