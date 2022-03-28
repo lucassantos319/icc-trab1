@@ -66,6 +66,8 @@ double **GetFMatrix(infos in, double *x)
         printf("\n");
     }
 
+	
+    printf("\n");
     free(variables);
     return mF;
 
