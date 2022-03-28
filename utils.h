@@ -19,8 +19,9 @@ typedef struct
 typedef struct 
 {
      int n; 
-     char f[BUFFER_SIZE];
+     char f [BUFFER_SIZE];
      double *initialsApproaches;
+     double *solution;
      double epsilon;
      timesInfos *times;
      int itMax;

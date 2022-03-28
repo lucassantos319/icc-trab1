@@ -3,12 +3,30 @@
 void NewtonResolveMethod(infos in)
 {
     
+    in.solution = in.initialsApproaches;
     double *x_ant = in.initialsApproaches;
     double *x = (double *) malloc (sizeof(double)*in.n);
+    double *delta = (double *) malloc (sizeof(double)*in.n);
 
     double **mF = GetMatrix(in,x_ant,1), **mFD = GetMatrix(in,x_ant,2);
     if ( mF == NULL  )
         return ;
+
+    for (int i = 0 ; i < in.itMax ; ++i)
+    {
+        if ( GetBiggestValue(x_ant) < in.epsilon )
+        {
+            in.solution = x_ant;
+            return;
+        }
+
+        delta = ResolveLinearSistem(mF,mFD);
+        for ( int j = 0 ; j < in.n ; ++j )
+            x[j] = x_ant[j] + delta[j];
+
+        
+        
+    }
 
 }
 
@@ -22,7 +40,12 @@ void NewtonGaussSeidelResolveMethod(infos in)
 
 }
 
-void printResult(infos *in, int countProblems, char *arqName)
+void PrintResult(infos *in, int countProblems, char *arqName)
+{
+
+}
+
+double *ResolveLinearSistem(double **mF, double **mFD)
 {
 
 }
@@ -53,7 +76,7 @@ double **GetMatrix(infos in, double *x, int type)
     if ( type == 1 )
         for ( int i = 0 ; i < in.n ; ++i )
             for (int j = 0 ; j < in.n ; ++j )
-                mF[i][j] = evaluator_evaluate(f,in.n,variables,x);
+                mF[i][j] = (evaluator_evaluate(f,in.n,variables,x))*-1;
     else
     {
         // change method to get what function wants 
@@ -65,17 +88,23 @@ double **GetMatrix(infos in, double *x, int type)
             }
     }
 
-    for (int i = 0 ; i < in.n ; ++i)
-    {
-        for (int j = 0 ; j < in.n ; ++j)
-            printf("%g ",mF[i][j]);
-
-        printf("\n");
-    }
-
-	
-    printf("\n");
+    PrintMatrix(mF,in.n);
     free(variables);
+
     return mF;
 
 }
+
+void PrintMatrix(double **x, int n)
+{
+    for (int i = 0 ; i < n ; ++i)
+    {
+        for (int j = 0 ; j < n ; ++j)
+            printf("%g ",x[i][j]);
+
+        printf("\n");
+    }
+    printf("\n");
+
+}
+

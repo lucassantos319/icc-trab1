@@ -4,9 +4,10 @@
 #include "utils.h"
 
 void NewtonResolveMethod(infos in);
-double **GetMatrix(infos in, double *x,int type);
+void PrintMatrix(double **x, int n);
 void NewtonModifyResolveMethod(infos in);
 void NewtonGaussSeidelResolveMethod(infos in);
-void printResult(infos *in, int countProblems,char *arqName);
+double **GetMatrix(infos in, double *x,int type);
+void PrintResult(infos *in, int countProblems,char *arqName);
 
 #endif
