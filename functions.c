@@ -54,7 +54,7 @@ double **GetFMatrix(infos in, double *x)
         for (int j = 0 ; j < in.n ; ++j )
         {
             fd = evaluator_derivative(f,variables[i]);
-            mF[i][j] = evaluator_evaluate(f,in.n,variables[i],x);
+            mF[i][j] = evaluator_evaluate(f,in.n,variables,x);
         }
 
 

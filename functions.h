@@ -3,6 +3,7 @@
 
 #include "utils.h"
 
+double **GetFMatrix(infos in, double *x);
 void NewtonResolveMethod(infos in);
 void NewtonModifyResolveMethod(infos in);
 void NewtonGaussSeidelResolveMethod(infos in);
