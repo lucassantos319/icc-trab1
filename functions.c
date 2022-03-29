@@ -16,24 +16,24 @@ void NewtonResolveMethod(infos in)
 
     for (int i = 0 ; i < in.itMax ; ++i)
     {
-        if ( GetBiggestValue(x_ant, in.n) < in.epsilon )
-        {
+    	printf("\n--- %d ---\n",i);
+	if ( GetBiggestValue(x_ant, in.n) < in.epsilon )
             in.solution = x_ant;
-            return;
-        }
 
         ResolveLinearSistem(mF,mFD,in.n);
         for ( int j = 0 ; j < in.n ; ++j )
             x[j] = x_ant[j] + mF[j];
 
         if ( GetBiggestValue(x,in.n) < in.epsilon)
-        {
             in.solution = x;
-            return;
-        }
         
-        mFD = GetMatrix(in,x);
+	mFD = GetMatrix(in,x);
         mF = in.solution;
+
+  	for (int j = 0 ; j < in.n ; ++j )
+    		printf("%lf ",mF[j]);
+
+ 	printf("\n");
     }
 
 }
@@ -111,9 +111,7 @@ double **GetMatrix(infos in,double *x)
 
     }
 
-    PrintMatrix(mF,in.n);
     free(variables);
-
     return mF;
 
 }
