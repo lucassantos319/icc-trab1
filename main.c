@@ -14,7 +14,7 @@ int main (int argc, char *argv[])
         NewtonGaussSeidelResolveMethod(in[i]);
     }
 
-    printResult(in,countProblems,arqName);
+    PrintResult(in,countProblems,arqName);
 
 }
 
