@@ -8,24 +8,32 @@ void NewtonResolveMethod(infos in)
     double *x = (double *) malloc (sizeof(double)*in.n);
     double *delta = (double *) malloc (sizeof(double)*in.n);
 
-    double **mF = GetMatrix(in,x_ant,1), **mFD = GetMatrix(in,x_ant,2);
+    double **mFD = GetMatrix(in,x);
+    double *mF = in.solution;
+    
     if ( mF == NULL  )
         return ;
 
     for (int i = 0 ; i < in.itMax ; ++i)
     {
-        if ( GetBiggestValue(x_ant) < in.epsilon )
+        if ( GetBiggestValue(x_ant, in.n) < in.epsilon )
         {
             in.solution = x_ant;
             return;
         }
 
-        delta = ResolveLinearSistem(mF,mFD);
+        ResolveLinearSistem(mF,mFD,in.n);
         for ( int j = 0 ; j < in.n ; ++j )
-            x[j] = x_ant[j] + delta[j];
+            x[j] = x_ant[j] + mF[j];
 
+        if ( GetBiggestValue(x,in.n) < in.epsilon)
+        {
+            in.solution = x;
+            return;
+        }
         
-        
+        mFD = GetMatrix(in,x);
+        mF = in.solution;
     }
 
 }
@@ -45,12 +53,28 @@ void PrintResult(infos *in, int countProblems, char *arqName)
 
 }
 
-double *ResolveLinearSistem(double **mF, double **mFD)
+void ResolveLinearSistem(double *mF, double **mFD ,int n)
+{
+    double *x = (double *) malloc(sizeof(double)*n);
+    /* para cada linha a partir da primeira */
+    for (int i=0; i < n; ++i) {
+        for(int k=i+1; k < n; ++k) {
+            double m = mFD[k][i] / mFD[i][i];
+            mFD[k][i] = 0.0;
+            for(int j=i+1; j < n; ++j)
+                mFD[k][j] -= mFD[i][j] * m;
+
+            mF[k] -= mF[i] * m;
+        }
+    }
+}
+
+void TrocaLinha(double **mFD,double *mF, int i, int iPivo)
 {
 
 }
 
-double **GetMatrix(infos in, double *x, int type)
+double **GetMatrix(infos in,double *x)
 {
     void *f,*fd;
     int count;
@@ -73,19 +97,18 @@ double **GetMatrix(infos in, double *x, int type)
     if ( count != in.n )
         return NULL;
 
-    if ( type == 1 )
-        for ( int i = 0 ; i < in.n ; ++i )
-            for (int j = 0 ; j < in.n ; ++j )
-                mF[i][j] = (evaluator_evaluate(f,in.n,variables,x))*-1;
-    else
+    for ( int i = 0 ; i < in.n ; ++i )
+        in.solution[i] = (evaluator_evaluate(f,in.n,variables,x))*-1;
+    
+    // change method to get what function wants 
+    for ( int i = 0 ; i < in.n ; ++i )
     {
-        // change method to get what function wants 
-        for ( int i = 0 ; i < in.n ; ++i )
-            for (int j = 0 ; j < in.n ; ++j )
-            {
-                fd = evaluator_derivative(f,variables[i]);
-                mF[i][j] = evaluator_evaluate(fd,in.n,variables,x);
-            }
+        for (int j = 0 ; j < in.n ; ++j )
+        {
+            fd = evaluator_derivative(f,variables[i]);
+            mF[i][j] = evaluator_evaluate(fd,in.n,variables,x);
+        }
+
     }
 
     PrintMatrix(mF,in.n);
@@ -106,5 +129,15 @@ void PrintMatrix(double **x, int n)
     }
     printf("\n");
 
+}
+
+double GetBiggestValue(double *x, int n)
+{
+    int max = x[0];
+    for (int i = 1 ; i < n ; ++i)
+        if (x[i] > max)
+            max = x[i];
+
+    return max;
 }
 
