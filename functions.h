@@ -2,6 +2,7 @@
 #define __FUNCTIONS_H_
 
 #include "utils.h"
+#include <math.h>
 
 void NewtonResolveMethod(infos in);
 void PrintMatrix(double **x, int n);

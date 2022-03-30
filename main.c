@@ -8,8 +8,8 @@ int main (int argc, char *argv[])
 
     for ( int i = 0 ; i < countProblems ; ++i )
     {
-	printf("-- %s --\n",in[i].f);
- 	NewtonResolveMethod(in[i]);
+        printf("-- %s --\n",in[i].f);
+        NewtonResolveMethod(in[i]);
         NewtonModifyResolveMethod(in[i]);
         NewtonGaussSeidelResolveMethod(in[i]);
     }
