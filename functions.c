@@ -11,30 +11,29 @@ void NewtonResolveMethod(infos in)
     double **mFD = GetMatrix(in,x);
     double *mF = in.solution;
     
-    if ( mF == NULL  )
-        return ;
+    // if ( mF == NULL  )
+    //     return ;
 
-    for (int i = 0 ; i < in.itMax ; ++i)
-    {
-    	printf("\n--- %d ---\n",i);
-	if ( GetBiggestValue(x_ant, in.n) < in.epsilon )
-            in.solution = x_ant;
+    // for (int i = 0 ; i < in.itMax ; ++i)
+    // {
+    //     if ( GetBiggestValue(x_ant, in.n) < in.epsilon )
+    //             in.solution = x_ant;
 
-        ResolveLinearSistem(mF,mFD,in.n);
-        for ( int j = 0 ; j < in.n ; ++j )
-            x[j] = x_ant[j] + mF[j];
+    //     ResolveLinearSistem(mF,mFD,in.n);
+    //     for ( int j = 0 ; j < in.n ; ++j )
+    //         x[j] = x_ant[j] + mF[j];
 
-        if ( GetBiggestValue(x,in.n) < in.epsilon)
-            in.solution = x;
-        
-	mFD = GetMatrix(in,x);
-        mF = in.solution;
+    //     if ( GetBiggestValue(x,in.n) < in.epsilon)
+    //         in.solution = x;
+            
+    //     mFD = GetMatrix(in,x);
+    //         mF = in.solution;
 
-  	for (int j = 0 ; j < in.n ; ++j )
-    		printf("%lf ",mF[j]);
+    //     for (int j = 0 ; j < in.n ; ++j )
+    //             printf("%lf ",mF[j]);
 
- 	printf("\n");
-    }
+    //     printf("\n");
+    // }
 
 }
 
@@ -105,8 +104,8 @@ double **GetMatrix(infos in,double *x)
     {
         for (int j = 0 ; j < in.n ; ++j )
         {
-            fd = evaluator_derivative(f,variables[i]);
-            mF[i][j] = evaluator_evaluate(fd,in.n,variables,x);
+            fd = evaluator_derivative(f,variables[j]);
+            mF[i][j] = eval(fd,in.n,variables,in.solution);
         }
 
     }
