@@ -2,16 +2,20 @@
 #define __FUNCTIONS_H_
 
 #include "utils.h"
-#include <math.h>
 
-void NewtonResolveMethod(infos in);
+
+void ResolveProblems(infos in);
+void PrintVector(double *x, int n);
 void PrintMatrix(double **x, int n);
-double *GetMatrix(infos in,double *x);
+uint EncontrarMax(double **x, int n);
+double **GetMatrix(infos in,double *x);
 void NewtonModifyResolveMethod(infos in);
 double GetBiggestValue(double *x, int n);
 void NewtonGaussSeidelResolveMethod(infos in);
-void ResolveLinearSistem(double *mF, double *mFD,int n);
-void TrocaLinha(double **mFD,double *mF, int i, int iPivo);
+double *Retrosub(double *mF, double **mFD,int n );
+void NewtonResolveMethod(double *mF, double **mFD ,int n);
 void PrintResult(infos *in, int countProblems,char *arqName);
+void TrocaLinhas(double **mFD, double *mF, int i, uint iPivo, int n);
+double *ResolveLinearSistem(double *mF, double **mFD,int n,int type);
 
 #endif

@@ -1,56 +1,64 @@
 #include "functions.h"
 
-void NewtonResolveMethod(infos in)
+void TrocaLinhas(double **A, double *b, int i, uint iPivo, int n)
 {
-    
-    in.solution = in.initialsApproaches;
-    double *x_ant = in.initialsApproaches;
-    double *x = (double *) malloc (sizeof(double)*in.n);
-    double *delta = (double *) malloc (sizeof(double)*in.n);
+    double *aFirstValues = (double *) malloc(sizeof(double)*n);
+    double bFirstValue = b[iPivo];
 
-    double *mFD = GetMatrix(in,x_ant);
-    double *mF = x_ant;
-     
-    if ( mF == NULL  )
-        return ;
-
-    for (int i = 0 ; i < in.itMax ; ++i)
+    for (int j = 0 ; j < n ; ++j)
     {
-        if ( GetBiggestValue(x_ant, in.n) < in.epsilon )
-                in.solution = x_ant;
-
-
-
-        ResolveLinearSistem(mF,mFD,in.n);
-        for ( int j = 0 ; j < in.n ; ++j )
-            x[j] = x_ant[j] + mF[j];
-
-        if ( GetBiggestValue(x,in.n) < in.epsilon)
-            in.solution = x;
-
-        mFD = GetMatrix(in,x);
-        mF = in.solution;
-
-        for (int j = 0 ; j < in.n ; ++j )
-            printf("%lf ",mF[j]);
-
-        for (int j = 0 ; j < in.n ; ++j )
-            x_ant[j] = x[j];
+        aFirstValues[i] = A[iPivo][j];
+        A[iPivo][j] = A[i][j];
+        A[i][j] = aFirstValues[i];
             
-        printf("\n");
     }
+    
+    b[iPivo] = b[i];
+    b[i] = bFirstValue;
 
-    printf("Final solution: ");
-    for ( int i = 0 ; i < in.n ; ++i)
-        printf("%lf ",in.solution[i]);
+}
 
-    // printf("\n");
+void NewtonResolveMethod(double *mF, double **mFD ,int n)
+{
+    for ( int i = 0 ; i < n ; ++i)
+    {
+        uint iPivo = EncontrarMax(mFD,n);
+        if ( i != iPivo )
+            TrocaLinhas(mFD,mF,i,iPivo,n);
+        
+        for (int k = i+1 ; k < n ; ++k )
+        {
+            double m = mFD[k][i] / mFD[i][i];
+            mFD[k][i] = 0.0;
+            for ( int j = i+1 ; j < n ; ++j)
+                mFD[k][j] -= mFD[i][j] * m;
+
+            mF[k] -= mF[i] * m;
+        }
+    }
+    
 }
 
 void NewtonModifyResolveMethod(infos in)
 {
 
 }
+
+uint EncontrarMax(double **x, int n)
+{
+    int lineIndex = 0;
+    double max = x[0][0];
+    for (int i = 0 ; i < n ; ++i )
+        if ( fabs(x[i][0]) > max )
+        {
+            max = x[i][0];
+            lineIndex = i;
+        }
+
+    return lineIndex;
+
+}
+
 
 void NewtonGaussSeidelResolveMethod(infos in)
 {
@@ -64,77 +72,150 @@ void PrintResult(infos *in, int countProblems, char *arqName)
 
 void ResolveProblems(infos in)
 {
-    
+
+    in.solution = in.initialsApproaches;
+    double *x_ant = in.initialsApproaches;
+    double *x = (double *) malloc (sizeof(double)*in.n);    
+    double *delta = (double *) malloc (sizeof(double)*in.n);
+
+    double **mFD = GetMatrix(in,x_ant);
+    double *mF = in.solution;
+
+    if ( mF == NULL )
+        return ;
+
+    // for (int type = 0 ; type < 3; ++type)
+    // {
+        for (int i = 0 ; i < 2 ; ++i)
+        {
+            if ( GetBiggestValue(mF, in.n) < in.epsilon )
+            {
+                printf("entrei\n");
+                in.solution = x_ant;
+                return;
+            }
+
+            delta = ResolveLinearSistem(mF,mFD,in.n,0);
+            for ( int j = 0 ; j < in.n ; ++j )
+                x[j] = x_ant[j] + delta[j];
+
+            if ( GetBiggestValue(delta,in.n) < in.epsilon)
+            {
+                printf("entrei2\n");
+                in.solution = x;
+                return;
+            }
+
+            // printf("mFD:\n"); 
+            // PrintMatrix(mFD,in.n);
+            // printf("\n");
+            // printf("mF:\n");
+            // PrintVector(mF,in.n);
+            // printf("\n");
+            // printf("X:\n");
+            // PrintVector(x,in.n);
+            printf("============ %d ==========\n",i);
+
+            for (int j = 0 ; j < in.n ; ++j )
+                x_ant[j] = x[j];
+                
+            mFD = GetMatrix(in,x_ant);
+            mF = in.solution;
+        }
+
+    //     x_ant = in.initialsApproaches;
+    //     mF = x_ant;
+    //     mFD = NULL;
+    // }
 }
 
-void ResolveLinearSistem(double *mF, double *mFD ,int n)
+double *Retrosub(double *mF, double **mFD,int n )
 {
     double *x = (double *) malloc(sizeof(double)*n);
-    /* para cada linha a partir da primeira */
-    int l;
-    for (int i=0; i < n; ++i) 
+    for ( int i = n-1 ; i >= 0 ; --i)
     {
-        for(int k=i+1; k < n; ++k) 
-        {
-            double m = mFD[k] / mFD[i];
-            mFD[k] = 0.0;
-                    
-            for(int j=i+1; j < n; ++j)
-                mFD[k] -= mFD[i] * m;
+        x[i] = mF[i];
+        for (int j = i+1; j < n ; ++j )
+            x[i] -= mFD[i][j] * x[j];
 
-            mF[k] -= mF[i] * m;
-        }
+        x[i] /= mFD[i][i];
     }
 
+    return x;
 }
 
-void TrocaLinha(double **mFD,double *mF, int i, int iPivo)
+double *ResolveLinearSistem(double *mF, double **mFD ,int n,int type)
 {
 
+    if ( type == 0 )
+        NewtonResolveMethod(mF,mFD,n);
+
+
+    PrintMatrix(mFD,n);
+    PrintVector(mF,n);
+    double *x = Retrosub(mF,mFD,n);
+    PrintVector(x,n);
+
+    return x;
+
 }
+
 
 double **GetMatrix(infos in,double *x)
 {
-    void *f,*fd;
     int count;
     char **variables;
+    void *f,*fd,**fDs = (void **) malloc(sizeof(void *)*in.n);
     
-    double **mF = (double **) malloc (sizeof(double *)*in.n);
+    double **mF = (double **) malloc (sizeof(double*)*in.n);
 
-    for ( int i = 0 ; i < in.n ; ++i )
-        mF[i] = (double *) malloc (sizeof(double) * in.n);
+    for (int i = 0 ; i < in.n ; ++i)
+        mF[i] = (double *)malloc(sizeof(double)*in.n);
 
-    f = evaluator_create(in.f);
     int length = strlen(in.f);
 
     if ( in.f[length-1] == '\n' && length > 0 )
         in.f[length-1] = '\0';
     
+    f = evaluator_create(in.f);
     assert(f);
+
+
     evaluator_get_variables (f, &variables, &count);
-    for ( int i = 0 ; i < count; ++i)
-        printf("%s ",variables[i]);
+    printf("F(x) = %s\n",evaluator_get_string(f));
+    printf("F(x) valor => %1.14e\n",evaluator_evaluate(f,in.n,variables,x));
+    printf("n = %d ; X: ",in.n);
+    for ( int i = 0 ; i < in.n ; ++i )
+        printf("%lf ",x[i]);
 
     printf("\n");
-
-    if ( count != in.n )
-        return NULL;
-
     for ( int i = 0 ; i < in.n ; ++i )
-        in.solution[i] = (evaluator_evaluate(f,in.n,variables,x))*-1;
-    
+    {
+        fDs[i] = evaluator_derivative(f,variables[i]);
+        printf("F'(x) = %s\n",evaluator_get_string(fDs[i]));
+        in.solution[i] = (evaluator_evaluate(fDs[i],in.n,variables,x))*-1;
+        printf("F'(x) valor = %1.14e\n",in.solution[i]);
+    }
+
     // change method to get what function wants 
     for ( int i = 0 ; i < in.n ; ++i )
     {
-        for (int j = 0 ; j < in.n ; ++j )
+        for (int j = 0 ; j < in.n ; ++j)
         {
-            fd = evaluator_derivative(f,variables[j]);
-            mF[i][j] = evaluator_evaluate(fd,in.n,variables,x);
-        }
+            fd = evaluator_derivative(fDs[i],variables[j]);
+            printf("F''(x) = %s\n",evaluator_get_string(fd));
 
+            mF[i][j] = evaluator_evaluate(fd,in.n,variables,x);
+            printf("F''(x) valor = %1.14e\n",mF[i][j]);
+        }
     }
 
-    PrintMatrix(mF,in.n);
+     printf("n = %d ; X: ",in.n);
+    for ( int i = 0 ; i < in.n ; ++i )
+        printf("%lf ",x[i]);
+    
+    printf("\n");
+    
     free(variables);
     return mF;
 
@@ -144,13 +225,19 @@ void PrintMatrix(double **x, int n)
 {
     for (int i = 0 ; i < n ; ++i)
     {
-        for (int j = 0 ; j < n ; ++j)
+        for (int j = 0 ; j < n ; ++j)        
             printf("%g ",x[i][j]);
 
         printf("\n");
     }
-    printf("\n");
+}
 
+void PrintVector(double *x, int n)
+{
+    for (int i = 0 ; i < n ; ++i)
+        printf("%g ",x[i]);
+
+    printf("\n");
 }
 
 double GetBiggestValue(double *x, int n)
@@ -160,7 +247,6 @@ double GetBiggestValue(double *x, int n)
         if (fabs(x[i]) > max)
             max = x[i];
     
-    printf("max - %lf\n",max);
     return max;
 }
 
