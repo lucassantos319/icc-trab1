@@ -10,7 +10,6 @@ void TrocaLinhas(double **A, double *b, int i, uint iPivo, int n)
         aFirstValues[i] = A[iPivo][j];
         A[iPivo][j] = A[i][j];
         A[i][j] = aFirstValues[i];
-            
     }
     
     b[iPivo] = b[i];
@@ -86,13 +85,13 @@ void ResolveProblems(infos in)
 
     // for (int type = 0 ; type < 3; ++type)
     // {
-        for (int i = 0 ; i < 2 ; ++i)
+        for (int i = 0 ; i < 2; ++i)
         {
             if ( GetBiggestValue(mF, in.n) < in.epsilon )
             {
                 printf("entrei\n");
                 in.solution = x_ant;
-                return;
+                break;
             }
 
             delta = ResolveLinearSistem(mF,mFD,in.n,0);
@@ -101,20 +100,9 @@ void ResolveProblems(infos in)
 
             if ( GetBiggestValue(delta,in.n) < in.epsilon)
             {
-                printf("entrei2\n");
                 in.solution = x;
-                return;
+                break;
             }
-
-            // printf("mFD:\n"); 
-            // PrintMatrix(mFD,in.n);
-            // printf("\n");
-            // printf("mF:\n");
-            // PrintVector(mF,in.n);
-            // printf("\n");
-            // printf("X:\n");
-            // PrintVector(x,in.n);
-            printf("============ %d ==========\n",i);
 
             for (int j = 0 ; j < in.n ; ++j )
                 x_ant[j] = x[j];
@@ -124,8 +112,8 @@ void ResolveProblems(infos in)
         }
 
     //     x_ant = in.initialsApproaches;
-    //     mF = x_ant;
-    //     mFD = NULL;
+    //     mFD = GetMatrix(in,x_ant);
+    //     mF = in.solution;
     // }
 }
 
@@ -164,7 +152,8 @@ double *ResolveLinearSistem(double *mF, double **mFD ,int n,int type)
 double **GetMatrix(infos in,double *x)
 {
     int count;
-    char **variables;
+    
+    char **variables;   
     void *f,*fd,**fDs = (void **) malloc(sizeof(void *)*in.n);
     
     double **mF = (double **) malloc (sizeof(double*)*in.n);
@@ -179,12 +168,8 @@ double **GetMatrix(infos in,double *x)
     
     f = evaluator_create(in.f);
     assert(f);
-
-
     evaluator_get_variables (f, &variables, &count);
     printf("F(x) = %s\n",evaluator_get_string(f));
-    printf("F(x) valor => %1.14e\n",evaluator_evaluate(f,in.n,variables,x));
-    printf("n = %d ; X: ",in.n);
     for ( int i = 0 ; i < in.n ; ++i )
         printf("%lf ",x[i]);
 
@@ -193,24 +178,39 @@ double **GetMatrix(infos in,double *x)
     {
         fDs[i] = evaluator_derivative(f,variables[i]);
         printf("F'(x) = %s\n",evaluator_get_string(fDs[i]));
-        in.solution[i] = (evaluator_evaluate(fDs[i],in.n,variables,x))*-1;
+        printf("X - 1: ");
+        for ( int i = 0 ; i < in.n ; ++i )
+            printf("%lf ",x[i]);
+    
+        printf("\n");
+        in.solution[i] = evaluator_evaluate(fDs[i],count,variables,x)*-1;
         printf("F'(x) valor = %1.14e\n",in.solution[i]);
-    }
-
-    // change method to get what function wants 
-    for ( int i = 0 ; i < in.n ; ++i )
-    {
+        
+        printf("X - 2: ");
+        for ( int i = 0 ; i < in.n ; ++i )
+        {
+            printf("%lf ",x[i]);
+        }
+    
+        printf("\n");
+        
         for (int j = 0 ; j < in.n ; ++j)
         {
+            
             fd = evaluator_derivative(fDs[i],variables[j]);
             printf("F''(x) = %s\n",evaluator_get_string(fd));
-
-            mF[i][j] = evaluator_evaluate(fd,in.n,variables,x);
+            mF[i][j] = evaluator_evaluate(fd,count,variables,x);
             printf("F''(x) valor = %1.14e\n",mF[i][j]);
+            printf("X - 3: ");
+            for ( int i = 0 ; i < in.n ; ++i )
+                printf("%lf ",x[i]);
+        
+            printf("\n");
+        
         }
     }
-
-     printf("n = %d ; X: ",in.n);
+    
+    printf("X: ");
     for ( int i = 0 ; i < in.n ; ++i )
         printf("%lf ",x[i]);
     

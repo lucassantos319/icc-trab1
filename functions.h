@@ -8,7 +8,7 @@ void ResolveProblems(infos in);
 void PrintVector(double *x, int n);
 void PrintMatrix(double **x, int n);
 uint EncontrarMax(double **x, int n);
-double **GetMatrix(infos in,double *x);
+double **GetMatrix(infos in, double *x);
 void NewtonModifyResolveMethod(infos in);
 double GetBiggestValue(double *x, int n);
 void NewtonGaussSeidelResolveMethod(infos in);
