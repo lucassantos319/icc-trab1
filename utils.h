@@ -34,5 +34,7 @@ typedef struct
 
 infos *GetInfos(int *countProblems);
 char* validateArgs(int argc, char *argv[]);
+double timestamp(void);
+
 
 #endif 
