@@ -11,11 +11,12 @@
 
 typedef struct 
 {
-     double newtonTime;
-     double newtonModifyTime;
-     double newtonGaussSeidel;
-
-} timesInfos;
+     int it;
+     double timeTotal;
+     double timeDerivate;
+     double timeSL;
+     double **solution;
+} response ; 
 
 typedef struct 
 {
@@ -23,8 +24,10 @@ typedef struct
      char f [BUFFER_SIZE];
      double *initialsApproaches;
      double *solution;
+     response newton;
+     response newtonModify;
+     response newtonInaccurate;
      double epsilon;
-     timesInfos *times;
      int itMax;
 
 } infos;

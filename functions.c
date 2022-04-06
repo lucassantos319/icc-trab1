@@ -19,9 +19,12 @@ void TrocaLinhas(double **A, double *b, int i, uint iPivo, int n)
 
 void NewtonResolveMethod(double *mF, double **mFD ,int n)
 {
+    printf("-- Eliminação --\n");
     for ( int i = 0 ; i < n ; ++i)
     {
+        printf("n = %d\n",i);
         uint iPivo = EncontrarMax(mFD,n);
+        printf("pivo = %d\n",iPivo);
         if ( i != iPivo )
             TrocaLinhas(mFD,mF,i,iPivo,n);
         
@@ -38,9 +41,9 @@ void NewtonResolveMethod(double *mF, double **mFD ,int n)
     
 }
 
-void NewtonModifyResolveMethod(infos in)
+double *NewtonModifyResolveMethod(double **A,double b[], int n)
 {
-
+    return NULL;
 }
 
 uint EncontrarMax(double **x, int n)
@@ -58,10 +61,58 @@ uint EncontrarMax(double **x, int n)
 
 }
 
+double dr(double *x0, double *x1, unsigned int n){
 
-void NewtonGaussSeidelResolveMethod(infos in)
+    double dr, x_max;
+    unsigned int i;
+
+    dr = 0;
+    x_max = 0;
+
+    for(i = 0; i < n; i++){
+        if(fabs(x1[i] - x0[i]) > dr)
+            dr = fabs(x1[i] - x0[i]);
+        if(fabs(x1[i]) > x_max)
+            x_max = fabs(x1[i]);
+    }
+    dr = dr / x_max;
+    return dr;
+}
+
+double *NewtonGaussSeidelResolveMethod(double **A,double b[], int n)
 {
 
+    double e = 0.000001;
+    int i, j, k;
+    double sum;
+    double x0[n];
+    double *x1;
+
+    x1 = malloc(sizeof(double)*n);
+
+    for(i = 0; i < n; i++)
+        x0[i] = x1[i] = 0;
+
+    do {
+        k++;
+
+        for(i = 0; i < n; i++)
+            x0[i] = x1[i];
+
+        for(i = 0; i < n; i++){
+            sum = 0;
+
+            for(j = 0; j < i; j++)
+                sum += A[i][j] * x1[j];
+
+            for(j = i+1; j < n; j++)
+                sum += A[i][j] * x0[j];
+
+            x1[i] = (b[i] - sum) / A[i][i];
+        }
+    } while( dr(x0,x1,n) > e && k < 50);
+
+    return x1;
 }
 
 void PrintResult(infos *in, int countProblems, char *arqName)
@@ -69,10 +120,33 @@ void PrintResult(infos *in, int countProblems, char *arqName)
 
 }
 
+void CopySolution(int type,infos *in,int i, double *x)
+{
+    int count;
+    response *aux;
+    char **variables;
+    
+    void *f = evaluator_create(in->f);
+    assert(f);
+    evaluator_get_variables (f, &variables, &count);
+
+    if (type == 0)
+        aux = &in->newton;
+    else
+        if ( type == 1)
+            aux = &in->newtonModify;
+        else
+            if ( type == 2 )
+                aux = &in->newtonInaccurate;
+
+    aux->it = i;
+    for ( int j = 0 ; j < in->n ; ++j )
+        aux->solution[i][j] = evaluator_evaluate(f,count,variables,x);
+}
+
 void ResolveProblems(infos in)
 {
-
-    in.solution = in.initialsApproaches;
+    in.solution = malloc(sizeof(double)*in.n);
     double *x_ant = in.initialsApproaches;
     double *x = (double *) malloc (sizeof(double)*in.n);    
     double *delta = (double *) malloc (sizeof(double)*in.n);
@@ -83,38 +157,43 @@ void ResolveProblems(infos in)
     if ( mF == NULL )
         return ;
 
-    // for (int type = 0 ; type < 3; ++type)
-    // {
-        for (int i = 0 ; i < 2; ++i)
+    for (int type = 0 ; type < 3; ++type)
+    {
+        for (int i = 0 ; i < in.itMax; ++i)
         {
             if ( GetBiggestValue(mF, in.n) < in.epsilon )
             {
-                printf("entrei\n");
-                in.solution = x_ant;
+                CopySolution(2,&in,i,x_ant);
                 break;
             }
 
-            delta = ResolveLinearSistem(mF,mFD,in.n,0);
+            delta = ResolveLinearSistem(mF,mFD,in.n,2);
             for ( int j = 0 ; j < in.n ; ++j )
                 x[j] = x_ant[j] + delta[j];
 
             if ( GetBiggestValue(delta,in.n) < in.epsilon)
             {
-                in.solution = x;
+                CopySolution(2,&in,i,x_ant);
                 break;
             }
 
+            printf("---wntrei\n");
+            CopySolution(2,&in,i,x_ant);
             for (int j = 0 ; j < in.n ; ++j )
                 x_ant[j] = x[j];
-                
+
             mFD = GetMatrix(in,x_ant);
             mF = in.solution;
         }
-
-    //     x_ant = in.initialsApproaches;
-    //     mFD = GetMatrix(in,x_ant);
-    //     mF = in.solution;
-    // }
+        
+        // printf("---- newton ----\n");
+        // PrintSolution(&in,in.newton.solution,in.newton.it,in.n);
+        // printf("---- newton inaccurate ----\n");
+        // PrintSolution(&in,in.newtonInaccurate.solution,in.newtonInaccurate.it,in.n);
+        x_ant = in.initialsApproaches;
+        mFD = GetMatrix(in,x_ant);
+        mF = in.solution;
+    }
 }
 
 double *Retrosub(double *mF, double **mFD,int n )
@@ -136,15 +215,18 @@ double *ResolveLinearSistem(double *mF, double **mFD ,int n,int type)
 {
 
     if ( type == 0 )
+    {
         NewtonResolveMethod(mF,mFD,n);
+        return Retrosub(mF,mFD,n);
+    }
 
+    if ( type == 1 )
+        return NewtonModifyResolveMethod(mFD,mF,n);
 
-    PrintMatrix(mFD,n);
-    PrintVector(mF,n);
-    double *x = Retrosub(mF,mFD,n);
-    PrintVector(x,n);
+    if ( type == 2 )
+        return NewtonGaussSeidelResolveMethod(mFD,mF,n);
 
-    return x;
+    return NULL;
 
 }
 
@@ -152,7 +234,6 @@ double *ResolveLinearSistem(double *mF, double **mFD ,int n,int type)
 double **GetMatrix(infos in,double *x)
 {
     int count;
-    
     char **variables;   
     void *f,*fd,**fDs = (void **) malloc(sizeof(void *)*in.n);
     
@@ -169,52 +250,18 @@ double **GetMatrix(infos in,double *x)
     f = evaluator_create(in.f);
     assert(f);
     evaluator_get_variables (f, &variables, &count);
-    printf("F(x) = %s\n",evaluator_get_string(f));
-    for ( int i = 0 ; i < in.n ; ++i )
-        printf("%lf ",x[i]);
-
-    printf("\n");
+   
     for ( int i = 0 ; i < in.n ; ++i )
     {
         fDs[i] = evaluator_derivative(f,variables[i]);
-        printf("F'(x) = %s\n",evaluator_get_string(fDs[i]));
-        printf("X - 1: ");
-        for ( int i = 0 ; i < in.n ; ++i )
-            printf("%lf ",x[i]);
-    
-        printf("\n");
         in.solution[i] = evaluator_evaluate(fDs[i],count,variables,x)*-1;
-        printf("F'(x) valor = %1.14e\n",in.solution[i]);
-        
-        printf("X - 2: ");
-        for ( int i = 0 ; i < in.n ; ++i )
-        {
-            printf("%lf ",x[i]);
-        }
-    
-        printf("\n");
-        
+
         for (int j = 0 ; j < in.n ; ++j)
         {
-            
             fd = evaluator_derivative(fDs[i],variables[j]);
-            printf("F''(x) = %s\n",evaluator_get_string(fd));
             mF[i][j] = evaluator_evaluate(fd,count,variables,x);
-            printf("F''(x) valor = %1.14e\n",mF[i][j]);
-            printf("X - 3: ");
-            for ( int i = 0 ; i < in.n ; ++i )
-                printf("%lf ",x[i]);
-        
-            printf("\n");
-        
         }
     }
-    
-    printf("X: ");
-    for ( int i = 0 ; i < in.n ; ++i )
-        printf("%lf ",x[i]);
-    
-    printf("\n");
     
     free(variables);
     return mF;
@@ -227,6 +274,24 @@ void PrintMatrix(double **x, int n)
     {
         for (int j = 0 ; j < n ; ++j)        
             printf("%g ",x[i][j]);
+
+        printf("\n");
+    }
+}
+
+void PrintSolution(infos *in,double **x, int it, int n)
+{
+    int count;
+    char **variables;
+    
+    void *f = evaluator_create(in->f);
+    assert(f);
+    evaluator_get_variables (f, &variables, &count);
+
+    for ( int i = 0 ; i < it+1 ; ++i)
+    {
+        for ( int j = 0 ; j < n ; ++j)
+            printf("x => %1.14e\n",x[i][j]);
 
         printf("\n");
     }
