@@ -22,24 +22,26 @@ infos *GetInfos(int *countProblems)
         
         scanf("%lf",&in[(*countProblems)-1].epsilon);
         scanf("%d",&in[(*countProblems)-1].itMax);
- 
+       
+        in[(*countProblems)-1].newton.solution = (double **) malloc(sizeof(double*)*in[(*countProblems)-1].itMax);
+        for ( int i = 0 ; i < in[(*countProblems)-1].itMax ; ++i )
+            in[(*countProblems)-1].newton.solution[i] = (double *)malloc (sizeof(double)*in[(*countProblems)-1].n);
+
+        in[(*countProblems)-1].newtonModify.solution = (double **) malloc(sizeof(double*)*in[(*countProblems)-1].itMax);
+        for ( int i = 0 ; i < in[(*countProblems)-1].itMax ; ++i )
+            in[(*countProblems)-1].newtonModify.solution[i] = (double *)malloc (sizeof(double)*in[(*countProblems)-1].n);
+
+        in[(*countProblems)-1].newtonInaccurate.solution = (double **) malloc(sizeof(double*)*in[(*countProblems)-1].itMax);
+        for ( int i = 0 ; i < in[(*countProblems)-1].itMax ; ++i )
+            in[(*countProblems)-1].newtonInaccurate.solution[i] = (double *)malloc (sizeof(double)*in[(*countProblems)-1].n);
+
         ++(*countProblems);
         in = realloc (in,sizeof(infos)*(*countProblems)-1);
+        
     }
     
-    in->newton.solution = (double **) malloc(sizeof(double*)*in->itMax);
-    for ( int i = 0 ; i < in->itMax ; ++i )
-        in->newton.solution[i] = (double *)malloc (sizeof(double)*in->n);
-
-    in->newtonModify.solution = (double **) malloc(sizeof(double*)*in->itMax);
-    for ( int i = 0 ; i < in->itMax ; ++i )
-        in->newtonModify.solution[i] = (double *)malloc (sizeof(double)*in->n);
-
-    in->newtonInaccurate.solution = (double **) malloc(sizeof(double*)*in->itMax);
-    for ( int i = 0 ; i < in->itMax ; ++i )
-        in->newtonInaccurate.solution[i] = (double *)malloc (sizeof(double)*in->n);
-
     return in;
+    
 }
 
 char* validateArgs(int argc, char *argv[])

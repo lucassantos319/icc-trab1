@@ -40,7 +40,90 @@ void NewtonResolveMethod(double *mF, double **mFD ,int n)
 
 double *NewtonModifyResolveMethod(double **A,double b[], int n)
 {
-    return NULL;
+
+    double pivo,m,*c = malloc(sizeof(double)*n) ;
+    int l_pivo,troca ;
+    int *p = malloc (sizeof(int)*n);
+    for (int i = 0 ; i < n ; ++i)
+        p[i] = i;
+
+    for (int i = 0 ; i < n ; ++i)
+    {
+        pivo = A[i][i];
+        l_pivo = i;
+        for ( int j = i+1 ; j < n ; ++j)
+        {
+            if ( fabs(A[j][i]) > pivo)
+            {
+                pivo = A[j][i];
+                l_pivo = j;
+            }
+        }
+
+        if ( pivo == 0 )
+        {
+            fprintf(stderr,"Matriz é singular");
+            return NULL;
+        }
+    
+        if ( l_pivo != i )
+        {
+            troca = p[i];
+            p[i] = p[l_pivo];
+            p[l_pivo] = troca;
+
+            for ( int j = i+1; j < n ; ++j)
+            {
+                troca = A[i][j];
+                A[i][j] = A[l_pivo][j];
+                A[l_pivo][j] = troca;
+            }
+
+        }
+
+        for (int j = i+1 ; j < n ; ++j)
+        {
+            m = A[j][i]/A[i][i];
+            A[j][i] = m;
+            for ( int k = i+1 ; k < n ; ++k )
+                A[j][k] = A[j][k] - m*A[i][k];
+        }
+    }
+
+    int aux;
+    double *y = malloc(sizeof(double)*n);
+    double *x = malloc(sizeof(double)*n);
+    
+    for (int i = 0 ; i < n ; ++i ){
+        x[i] = 0;
+        y[i] = 0;
+    }
+
+    for  (int i = 0 ; i < n ; ++i)
+    {
+        aux = p[i];
+        c[i] = b[aux];
+    }
+
+    for (int i = 0 ; i < n ; ++i )
+    {
+        double s = 0;
+        for ( int j = 0 ; j < n ; ++j )
+            s += A[i][j]*y[j];
+
+        y[i] = c[i] - s;
+    }
+
+     for (int i = 0 ; i < n ; ++i )
+    {
+        double s = 0;
+        for ( int j = 0 ; j < n ; ++j )
+            s += A[i][j]*x[j];
+
+        x[i] = (y[i]-s)/A[i][i];
+    }
+
+    return x;
 }
 
 uint EncontrarMax(double **x, int n)
@@ -115,7 +198,9 @@ double *NewtonGaussSeidelResolveMethod(double **A,double b[], int n)
 int GetMaxIt(infos in)
 {
     int newtonIt = in.newton.it, newtonModifyIt = in.newtonModify.it,newtonInaccuraceIt = in.newtonInaccurate.it;
-
+    // printf("newtonIt => %d\n",newtonIt);
+    // printf("newtonModifyIt => %d\n",newtonModifyIt);
+    // printf("newtonInaccuraceIt => %d\n",newtonInaccuraceIt);
     if ( newtonIt >= newtonModifyIt && newtonIt >= newtonInaccuraceIt )
         return newtonIt;
 
@@ -128,58 +213,83 @@ int GetMaxIt(infos in)
     return 0;
 }
 
-void PrintResult(infos *in, int countProblems, char *arqName)
+void PrintResult(infos in, char *arqName)
 {
-    for ( int i = 0 ; i < countProblems ; ++i )
-    {
-        printf("%d\n",in[i].n);
-        printf("%s\n",in[i].f);
+   
+        printf("%d\n",in.n);
+        printf("%s\n",in.f);
         printf("#\n");
         printf("Iteração \t| Newton Padrão \t| Newton Modificado \t| Newton Inexato\n");
-
-        int maxIt = GetMaxIt(in[i]);
-        for ( int j = 0 ; j < maxIt ; ++j)
+      
+        int maxIt = GetMaxIt(in);
+        for ( int j = 0 ; j < maxIt; ++j)
         {
+            printf("%d \t|",j);
+            
+            if ( in.newton.it > j)
+            {
+                double fx = in.newton.solution[j][0];
+                if (isnan(fx) || isinf(fx))
+                    printf(" %1.14e\t\t\t| ",fx);
+                else
+                    printf(" %1.14e\t| ", fx);
+            }
 
+            if ( in.newtonModify.it > j)
+            {
+                double fx = in.newtonModify.solution[j][0]; 
+                if (isnan(fx) || isinf(fx))
+                    printf(" %1.14e\t\t\t| ", fx);
+                else
+                    printf(" %1.14e\t| ", fx);
+
+            }
+
+            if ( in.newtonInaccurate.it > j)
+            {
+                double fx = in.newtonInaccurate.solution[j][0];
+                if (isnan(fx) || isinf(fx))
+                    printf(" %1.14e\t\t\t| ",fx);
+                else
+                    printf(" %1.14e\t| ", fx);
+            }
+            printf("\n");
         }
 
-        // Iteração        | Newton Padrão | Newton Modificado | Newton Inexato
-        // 0               | <f(X0)>       | <f(X0)>           | <f(X0)>
-        // ...                                         ...                                   ...                                              ...
-        // k               | <f(Xk)>       | <f(Xk)>           | <f(Xk)>
-        // Tempo total     | <tempo_total> | <tempo_total>     | <tempo_total>
-        // Tempo derivadas | <tempo_deriv> | <tempo_deriv>     | <tempo_deriv>
-        // Tempo SL        | <tempo_sl>    | <tempo_sl>        | <tempo_sl>
-        // #
-        printf("Tempo total \t| %1.14e\t| %1.14e\t| %1.14e\n", in[i].newton.timeTotal, in[i].newtonModify.timeTotal, in[i].newtonInaccurate.timeTotal);
-        printf("Tempo derivadas | %1.14e\t| %1.14e\t| %1.14e\n", in[i].newton.timeDerivate, in[i].newtonModify.timeDerivate, in[i].newtonInaccurate.timeDerivate);
-        printf("Tempo SL \t| %1.14e\t| %1.14e\t| %1.14e\n", in[i].newton.timeSL, in[i].newtonModify.timeSL, in[i].newtonInaccurate.timeSL);
+        printf("Tempo total \t| %1.14e\t| %1.14e\t| %1.14e\n", in.newton.timeTotal, in.newtonModify.timeTotal, in.newtonInaccurate.timeTotal);
+        printf("Tempo derivadas | %1.14e\t| %1.14e\t| %1.14e\n", in.newton.timeDerivate, in.newtonModify.timeDerivate, in.newtonInaccurate.timeDerivate);
+        printf("Tempo SL \t| %1.14e\t| %1.14e\t| %1.14e\n", in.newton.timeSL, in.newtonModify.timeSL, in.newtonInaccurate.timeSL);
         printf("#\n");
-    }
+    
 }
 
 void CopySolution(int type,infos *in,int i, double *x)
 {
     int count;
-    response *aux;
+    response aux;
     char **variables;
-    
     void *f = evaluator_create(in->f);
     assert(f);
     evaluator_get_variables (f, &variables, &count);
 
     if (type == 0)
-        aux = &in->newton;
-    else
-        if ( type == 1)
-            aux = &in->newtonModify;
-        else
-            if ( type == 2 )
-                aux = &in->newtonInaccurate;
+    {
+        in->newton.it = i+1;
+        in->newton.solution[i][0] = evaluator_evaluate(f,count,variables,x);  
+        
+    }
 
-    aux->it = i;
-    for ( int j = 0 ; j < in->n ; ++j )
-        aux->solution[i][j] = evaluator_evaluate(f,count,variables,x);
+    if ( type == 1 )
+    {
+        in->newtonModify.it = i+1;
+        in->newtonModify.solution[i][0] = evaluator_evaluate(f,count,variables,x);
+    }
+
+    if ( type == 2 )
+    {
+        in->newtonInaccurate.it = i+1;
+        in->newtonInaccurate.solution[i][0] = evaluator_evaluate(f,count,variables,x);
+    }
 }
 
 void CalculateTimeTotal(int type, infos *in, double timeTotal)
@@ -207,22 +317,13 @@ void CalculateTimeTotal(int type, infos *in, double timeTotal)
 void CalculateTimeSL(int type, infos *in, double timeSL)
 {
     if ( type == 0 )
-    {
-        in->newton.timeSL = 0;
         in->newton.timeSL += timestamp() - timeSL;
-    }
 
     if ( type == 1 )
-    {
-        in->newtonModify.timeSL = 0;
         in->newtonModify.timeSL += timestamp() - timeSL;
-    }
 
     if ( type == 2 )
-    {
-        in->newtonInaccurate.timeSL = 0;
         in->newtonInaccurate.timeSL += timestamp() - timeSL;
-    }
 
 }
 
@@ -248,70 +349,69 @@ void CalculateTimeDerivate(int type, infos *in, double timeDerivate)
 
 }
 
-void ResolveProblems(infos in)
+void ResolveProblems(infos* in)
 {
-    in.solution = malloc(sizeof(double)*in.n);
-    double *x_ant = in.initialsApproaches;
-    double *x = (double *) malloc (sizeof(double)*in.n);    
-    double *delta = (double *) malloc (sizeof(double)*in.n);
-
+    in->solution = malloc(sizeof(double)*in->n);
+    double initValuesAux ;
+    double *x_ant = (double *) malloc (sizeof(double)*in->n);
+    double *x = (double *) malloc (sizeof(double)*in->n);    
+    double *delta = (double *) malloc (sizeof(double)*in->n);
+    
+    for ( int i = 0 ; i < in->n ; ++i )
+    {
+        initValuesAux = in->initialsApproaches[i];
+        x_ant[i] = initValuesAux;
+    }
 
 
     for (int type = 0 ; type < 3; ++type)
     {
         double **mFD = GetMatrix(in,x_ant,type);
-        double *mF = in.solution;
+        double *mF = in->solution;
         double timeTotalInicial = timestamp();
     
         if ( mF == NULL )
-            return ;
+            return;
 
-        for (int i = 0 ; i < in.itMax; ++i)
+        for (int i = 0 ; i < in->itMax; ++i)
         {
-            if ( GetBiggestValue(mF, in.n) < in.epsilon )
+            if ( GetBiggestValue(mF, in->n) < in->epsilon )
             {
-                CopySolution(type,&in,i,x_ant);
+                CopySolution(type,in,i,x_ant);
                 break;
             }
 
             double timeSL = timestamp();
-            delta = ResolveLinearSistem(mF,mFD,in.n,type);
-            CalculateTimeSL(type,&in,timeSL);
-            
-            for ( int j = 0 ; j < in.n ; ++j )
+            delta = ResolveLinearSistem(mF,mFD,in->n,type);
+            CalculateTimeSL(type,in,timeSL);
+            for ( int j = 0 ; j < in->n ; ++j )
                 x[j] = x_ant[j] + delta[j];
 
-            if ( GetBiggestValue(delta,in.n) < in.epsilon)
+            if ( GetBiggestValue(delta,in->n) < in->epsilon)
             {
-                CopySolution(type,&in,i,x_ant);
+                CopySolution(type,in,i,x_ant);
                 break;
             }
 
-            printf("---wntrei\n");
-            CopySolution(type,&in,i,x_ant);
-            for (int j = 0 ; j < in.n ; ++j )
+           
+            CopySolution(type,in,i,x_ant);
+            for (int j = 0 ; j < in->n ; ++j )
                 x_ant[j] = x[j];
 
             mFD = GetMatrix(in,x_ant,type);
-            mF = in.solution;
+            mF = in->solution;
         }
 
-        // printf("---- newton ----\n");
-        // PrintSolution(&in,in.newton.solution,in.newton.it,in.n);
-        // printf("---- newton inaccurate ----\n");
-        // PrintSolution(&in,in.newtonInaccurate.solution,in.newtonInaccurate.it,in.n);
-       
-        CalculateTimeTotal(type,&in,timeTotalInicial);
-       
-        double auxInitalApproaches;
-        for (int j = 0 ; j < in.n ; ++j )
+        CalculateTimeTotal(type,in,timeTotalInicial);
+        for ( int j = 0 ; j < in->n ; ++j )
         {
-            auxInitalApproaches = in.initialsApproaches[j];
-            x_ant[j] = auxInitalApproaches;
+            initValuesAux = in->initialsApproaches[j];
+            x_ant[j] = initValuesAux;
         }
 
         mFD = GetMatrix(in,x_ant,type);
-        mF = in.solution;
+        mF = in->solution;
+
 
     }
 }
@@ -351,40 +451,43 @@ double *ResolveLinearSistem(double *mF, double **mFD ,int n,int type)
 }
 
 
-double **GetMatrix(infos in,double *x,int type)
+double **GetMatrix(infos *in,double *x,int type)
 {
     int count;
     char **variables;   
-    void *f,*fd,**fDs = (void **) malloc(sizeof(void *)*in.n);
+    void *f,*fd,**fDs = (void **) malloc(sizeof(void *)*in->n);
     
-    double **mF = (double **) malloc (sizeof(double*)*in.n);
+    double **mF = (double **) malloc (sizeof(double*)*in->n);
 
-    for (int i = 0 ; i < in.n ; ++i)
-        mF[i] = (double *)malloc(sizeof(double)*in.n);
+    for (int i = 0 ; i < in->n ; ++i)
+        mF[i] = (double *)malloc(sizeof(double)*in->n);
 
-    int length = strlen(in.f);
+    int length = strlen(in->f);
 
-    if ( in.f[length-1] == '\n' && length > 0 )
-        in.f[length-1] = '\0';
+    if ( in->f[length-1] == '\n' && length > 0 )
+        in->f[length-1] = '\0';
     
-    f = evaluator_create(in.f);
+    f = evaluator_create(in->f);
     assert(f);
     evaluator_get_variables (f, &variables, &count);
    
     double timeDerivate = timestamp();
-    for ( int i = 0 ; i < in.n ; ++i )
+    for ( int i = 0 ; i < in->n ; ++i )
     {
         fDs[i] = evaluator_derivative(f,variables[i]);
-        in.solution[i] = evaluator_evaluate(fDs[i],count,variables,x)*-1;
+        in->solution[i] = evaluator_evaluate(fDs[i],count,variables,x)*-1;
 
-        for (int j = 0 ; j < in.n ; ++j)
+        for (int j = 0 ; j < in->n ; ++j)
         {
             fd = evaluator_derivative(fDs[i],variables[j]);
             mF[i][j] = evaluator_evaluate(fd,count,variables,x);
         }
     }
     
-    CalculateTimeDerivate(type,&in,timeDerivate);
+    // PrintMatrix(mF,in->n);
+    // PrintVector(in->solution,in->n);
+    // printf("\n");
+    CalculateTimeDerivate(type,in,timeDerivate);
 
     free(variables);
     return mF;
