@@ -62,12 +62,14 @@ void NewtonResolveMethod(double *mF, double **mFD, int n)
     // PrintVector(mF, n);
 }
 
+
 double *NewtonModifyResolveMethod(double **A, double b[], int n)
 {
 
     double pivo, m, *c = malloc(sizeof(double) * n);
     int l_pivo, troca;
     int *p = malloc(sizeof(int) * n);
+   
     for (int i = 0; i < n; ++i)
         p[i] = i;
 
@@ -96,7 +98,7 @@ double *NewtonModifyResolveMethod(double **A, double b[], int n)
             p[i] = p[l_pivo];
             p[l_pivo] = troca;
 
-            for (int j = i + 1; j < n; ++j)
+            for (int j = 0; j < n; ++j)
             {
                 troca = A[i][j];
                 A[i][j] = A[l_pivo][j];
@@ -111,6 +113,7 @@ double *NewtonModifyResolveMethod(double **A, double b[], int n)
             for (int k = i + 1; k < n; ++k)
                 A[j][k] = A[j][k] - m * A[i][k];
         }
+
     }
 
     int aux;
@@ -138,19 +141,18 @@ double *NewtonModifyResolveMethod(double **A, double b[], int n)
         y[i] = c[i] - s;
     }
 
-    printf("Matriz A: \n");
-    PrintMatrix(A, n);
-    for (int i = 0; i < n; ++i)
+    
+    for (int i = n-1; i >= 0; --i)
     {
         double s = 0;
-        for (int j = 0; j < n; ++j)
+        for (int j = i+1; j < n; ++j)
             s += A[i][j] * x[j];
 
         x[i] = (y[i] - s) / A[i][i];
     }
 
-    printf("Vetor solução: ");
-    PrintVector(x, n);
+    // printf("Vetor solução: ");
+    // PrintVector(x, n);
 
     free(y);
     free(c);
@@ -165,7 +167,7 @@ uint EncontrarMax(double **x, int n)
     for (int i = 0; i < n; ++i)
         if (fabs(x[i][0]) > max)
         {
-            max = x[i][0];
+            max = fabs(x[i][0]) ;
             lineIndex = i;
         }
 
@@ -275,16 +277,16 @@ void ResolveProblems(infos *in)
         x_ant[i] = initValuesAux;
     }
 
-    for (int type = 1; type < 2; ++type)
+    for (int type = 0; type < 3; ++type)
     {
         double **mFD = GetMatrix(in, x_ant, type);
         double *mF = in->solution;
         double timeTotalInicial = timestamp();
 
-        printf("--Inicio do processo--\n");
-        PrintMatrix(mFD, in->n);
-        printf("\n");
-        PrintVector(mF, in->n);
+        // printf("--Inicio do processo--\n");
+        // PrintMatrix(mFD, in->n);
+        // printf("\n");
+        // PrintVector(mF, in->n);
 
         if (mF == NULL)
             return;

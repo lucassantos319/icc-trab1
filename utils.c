@@ -96,7 +96,7 @@ void PrintResult(infos in, char *arqName)
             {
                 double fx = in.newton.solution[j][0];
                 if (isnan(fx) || isinf(fx))
-                    printf(" \t\t\t| ", fx);
+                    printf(" \t\t\t| ");
                 else
                     printf(" %1.14e\t| ", fx);
             }
@@ -107,7 +107,7 @@ void PrintResult(infos in, char *arqName)
             {
                 double fx = in.newtonModify.solution[j][0];
                 if (isnan(fx) || isinf(fx))
-                    printf(" \t\t\t| ", fx);
+                    printf(" \t\t\t| ");
                 else
                     printf(" %1.14e\t| ", fx);
             }
@@ -118,7 +118,7 @@ void PrintResult(infos in, char *arqName)
             {
                 double fx = in.newtonInaccurate.solution[j][0];
                 if (isnan(fx) || isinf(fx))
-                    printf(" \t\t\t| ", fx);
+                    printf(" \t\t\t| ");
                 else
                     printf(" %1.14e\t| ", fx);
             }
